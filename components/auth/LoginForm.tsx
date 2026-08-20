@@ -9,15 +9,6 @@ const initialState = {
   error: ''
 };
 
-const sectionOptions = [
-  { label: 'BSIT 3E', value: 'BSIT 3E' },
-  { label: 'BSIT 3F', value: 'BSIT 3F' }
-];
-
-const courseOptions = [
-  { label: 'Open Source Programming', value: 'Open Source Programming' }
-];
-
 export default function LoginForm() {
   const [state, formAction, isPending] = useActionState(loginStudent, initialState);
 
@@ -32,34 +23,16 @@ export default function LoginForm() {
       <div className="space-y-5">
         <FormField 
           type="text"
-          name="fullName"
-          label="Full Name"
-          placeholder="e.g. Juan Dela Cruz"
-          required
-        />
-
-        <FormField 
-          type="dropdown"
-          name="section"
-          label="Section"
-          placeholder="Select Section..."
-          options={sectionOptions}
-          required
-        />
-
-        <FormField 
-          type="dropdown"
-          name="course"
-          label="Course"
-          placeholder="Select Course..."
-          options={courseOptions}
+          name="studentId"
+          label="Student ID"
+          placeholder="Enter your Student ID"
           required
         />
       </div>
 
       <div className="pt-4">
         <Button type="submit" fullWidth disabled={isPending} className="h-12 text-base shadow-sm font-semibold tracking-wide">
-          {isPending ? 'Authenticating...' : 'Continue'}
+          {isPending ? 'Authenticating...' : 'Login'}
         </Button>
       </div>
     </form>

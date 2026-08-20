@@ -1,53 +1,87 @@
 "use server"
 
 import { readJson, writeJson } from './data';
-import { Student, AllowedStudent, Module, Activity } from '../types';
+import { Student, AllowedStudent, Module, Activity, Instructor } from '../types';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-export async function loginStudent(prevState: any, formData: FormData) {
+export async function registerStudent(prevState: any, formData: FormData) {
+  const studentId = formData.get('studentId') as string;
   const fullName = formData.get('fullName') as string;
   const section = formData.get('section') as string;
   const course = formData.get('course') as string;
 
-  if (!fullName || !section || !course) {
+  if (!studentId || !fullName || !section || !course) {
     return { error: 'All fields are required.' };
   }
 
   const nameTrimmed = fullName.trim();
   const nameLower = nameTrimmed.toLowerCase();
   
-  // 1. Validate against allowed students
+  // Validate against allowed students
   const allowedData = readJson<{ students: AllowedStudent[] }>('allowed_students.json');
   const isAllowed = allowedData.students.some(
     s => s.fullName.toLowerCase() === nameLower && s.section === section
   );
 
   if (!isAllowed) {
-    return { error: 'Student not found. Please make sure your full name and section are correct.' };
+    return { error: 'Student not found in the master list. Please make sure your full name and section are correct.' };
   }
   
   if (course !== 'Open Source Programming') {
     return { error: 'Invalid course selected.' };
   }
 
-  // 2. Check if student is already registered
   const studentsData = readJson<{ students: Student[] }>('students.json');
-  let student = studentsData.students.find(
-    s => s.fullName.toLowerCase() === nameLower && s.section === section && s.course === course
+  
+  // Check if student ID already registered
+  const existingId = studentsData.students.find(s => s.id === studentId);
+  if (existingId) {
+    return { error: 'This Student ID is already registered. Please log in.' };
+  }
+
+  // Check if this student (by name/section) is already registered under another ID
+  const existingStudent = studentsData.students.find(
+    s => s.fullName.toLowerCase() === nameLower && s.section === section
   );
+  if (existingStudent) {
+    return { error: 'You are already registered. Please log in using your Student ID.' };
+  }
+
+  // Register new student
+  const newStudent: Student = {
+    id: studentId.trim(),
+    fullName: nameTrimmed,
+    section,
+    course,
+    registeredAt: new Date().toISOString()
+  };
+  
+  studentsData.students.push(newStudent);
+  writeJson('students.json', studentsData);
+
+  // Log in by setting a cookie
+  const cookieStore = await cookies();
+  cookieStore.set('studentId', newStudent.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+
+  redirect('/dashboard');
+}
+
+export async function loginStudent(prevState: any, formData: FormData) {
+  const studentId = formData.get('studentId') as string;
+
+  if (!studentId) {
+    return { error: 'Student ID is required.' };
+  }
+
+  const cleanId = studentId.trim();
+
+  // Check if student is registered
+  const studentsData = readJson<{ students: Student[] }>('students.json');
+  const student = studentsData.students.find(s => s.id === cleanId);
 
   if (!student) {
-    // Register new student
-    student = {
-      id: `STU-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      fullName: nameTrimmed,
-      section,
-      course,
-      registeredAt: new Date().toISOString()
-    };
-    studentsData.students.push(student);
-    writeJson('students.json', studentsData);
+    return { error: 'Student ID not found. Have you registered yet?' };
   }
 
   // Log in by setting a cookie
@@ -136,4 +170,95 @@ export async function getDashboardStats() {
     moduleViewsData,
     sectionData
   };
+}
+
+export async function loginInstructor(prevState: any, formData: FormData) {
+  const username = formData.get('username') as string;
+  const password = formData.get('password') as string;
+
+  if (!username || !password) {
+    return { error: 'Username and password are required.' };
+  }
+
+  const instructorsData = readJson<{ instructors: Instructor[] }>('instructors.json');
+  const instructor = instructorsData.instructors.find(
+    i => i.username === username && i.password === password
+  );
+
+  if (!instructor) {
+    return { error: 'Invalid username or password.' };
+  }
+
+  const cookieStore = await cookies();
+  cookieStore.set('instructorId', instructor.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+
+  redirect('/instructor/dashboard');
+}
+
+export async function instructorLogout() {
+  const cookieStore = await cookies();
+  cookieStore.delete('instructorId');
+  redirect('/instructor-login');
+}
+
+export async function getInstructor(): Promise<Instructor | null> {
+  const cookieStore = await cookies();
+  const instructorId = cookieStore.get('instructorId')?.value;
+  if (!instructorId) return null;
+
+  const instructorsData = readJson<{ instructors: Instructor[] }>('instructors.json');
+  const instructor = instructorsData.instructors.find(i => i.id === instructorId) || null;
+  if (instructor) {
+    // Remove password before returning to client components or pages
+    const { password, ...safeInstructor } = instructor;
+    return safeInstructor as Instructor;
+  }
+  return null;
+}
+
+export async function getInstructorDashboardStats() {
+  const instructor = await getInstructor();
+  if (!instructor) redirect('/instructor-login');
+
+  const studentsData = readJson<{ students: Student[] }>('students.json');
+  const activities = await getAllActivities();
+  const modules = await getModules();
+
+  // Filter students to only those in the instructor's sections
+  const instructorStudents = studentsData.students.filter(s => instructor.sections.includes(s.section));
+  const instructorStudentIds = new Set(instructorStudents.map(s => s.id));
+
+  // Filter activities to only those from instructor's students
+  const instructorActivities = activities.filter(a => instructorStudentIds.has(a.studentId));
+
+  const totalStudents = instructorStudents.length;
+  const uniqueStudentsViewed = new Set(instructorActivities.map(a => a.studentId)).size;
+
+  const moduleViewsData = modules.map(m => {
+    return {
+      name: m.title.replace('Midterm ', 'M').replace('Finals ', 'F'),
+      views: instructorActivities.filter(a => a.moduleId === m.id).length
+    };
+  });
+
+  const sectionData = instructor.sections.map(sec => ({
+    name: sec,
+    students: instructorStudents.filter(s => s.section === sec).length
+  }));
+
+  return {
+    totalStudents,
+    uniqueStudentsViewed,
+    moduleViewsData,
+    sectionData,
+    sections: instructor.sections
+  };
+}
+
+export async function getInstructorStudents() {
+  const instructor = await getInstructor();
+  if (!instructor) redirect('/instructor-login');
+
+  const studentsData = readJson<{ students: Student[] }>('students.json');
+  return studentsData.students.filter(s => instructor.sections.includes(s.section));
 }

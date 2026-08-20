@@ -27,3 +27,11 @@ export interface Activity {
   moduleId: string;
   viewedAt: string;
 }
+
+export interface Instructor {
+  id: string;
+  username: string;
+  password?: string;
+  fullName: string;
+  sections: string[];
+}
