@@ -1,0 +1,16 @@
+{
+  "students": [
+    {
+      "fullName": "Juan Dela Cruz",
+      "section": "BSIT 3E"
+    },
+    {
+      "fullName": "Maria Santos",
+      "section": "BSIT 3F"
+    },
+    {
+      "fullName": "Henry Dela Cruz",
+      "section": "BSIT 3E"
+    }
+  ]
+}

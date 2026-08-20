@@ -1,0 +1,130 @@
+{
+  "modules": [
+    {
+      "id": "MOD-MD-2",
+      "course": "Open Source Programming",
+      "semester": "midterm",
+      "week": 2,
+      "title": "Midterm Week 2",
+      "description": "Midterm Week 2 Module",
+      "pdf": "/modules/midterm/[MD] - WEEK 2 - OPS.pdf"
+    },
+    {
+      "id": "MOD-MD-3",
+      "course": "Open Source Programming",
+      "semester": "midterm",
+      "week": 3,
+      "title": "Midterm Week 3",
+      "description": "Midterm Week 3 Module",
+      "pdf": "/modules/midterm/[MD] - WEEK 3 - OPS.pdf"
+    },
+    {
+      "id": "MOD-MD-4",
+      "course": "Open Source Programming",
+      "semester": "midterm",
+      "week": 4,
+      "title": "Midterm Week 4",
+      "description": "Midterm Week 4 Module",
+      "pdf": "/modules/midterm/[MD] - WEEK 4 - OPS.pdf"
+    },
+    {
+      "id": "MOD-MD-5",
+      "course": "Open Source Programming",
+      "semester": "midterm",
+      "week": 5,
+      "title": "Midterm Week 5",
+      "description": "Midterm Week 5 Module",
+      "pdf": "/modules/midterm/[MD] - WEEK 5 - OPS.pdf"
+    },
+    {
+      "id": "MOD-MD-6",
+      "course": "Open Source Programming",
+      "semester": "midterm",
+      "week": 6,
+      "title": "Midterm Week 6",
+      "description": "Midterm Week 6 Module",
+      "pdf": "/modules/midterm/[MD] - WEEK 6 - OPS.pdf"
+    },
+    {
+      "id": "MOD-MD-7",
+      "course": "Open Source Programming",
+      "semester": "midterm",
+      "week": 7,
+      "title": "Midterm Week 7",
+      "description": "Midterm Week 7 Module",
+      "pdf": "/modules/midterm/[MD] - WEEK 7 - OPS.pdf"
+    },
+    {
+      "id": "MOD-MD-8",
+      "course": "Open Source Programming",
+      "semester": "midterm",
+      "week": 8,
+      "title": "Midterm Week 8",
+      "description": "Midterm Week 8 Module",
+      "pdf": "/modules/midterm/[MD] - WEEK 8 - OPS .pdf"
+    },
+    {
+      "id": "MOD-FN-1",
+      "course": "Open Source Programming",
+      "semester": "finals",
+      "week": 1,
+      "title": "Finals Week 1",
+      "description": "Finals Week 1 Module",
+      "pdf": "/modules/finals/[FN] - WEEK 1 - OPS.pdf"
+    },
+    {
+      "id": "MOD-FN-2",
+      "course": "Open Source Programming",
+      "semester": "finals",
+      "week": 2,
+      "title": "Finals Week 2",
+      "description": "Finals Week 2 Module",
+      "pdf": "/modules/finals/[FN] - WEEK 2 - OPS.pdf"
+    },
+    {
+      "id": "MOD-FN-3",
+      "course": "Open Source Programming",
+      "semester": "finals",
+      "week": 3,
+      "title": "Finals Week 3",
+      "description": "Finals Week 3 Module",
+      "pdf": "/modules/finals/[FN] - WEEK 3 - OPS.pdf"
+    },
+    {
+      "id": "MOD-FN-4",
+      "course": "Open Source Programming",
+      "semester": "finals",
+      "week": 4,
+      "title": "Finals Week 4",
+      "description": "Finals Week 4 Module",
+      "pdf": "/modules/finals/[FN] - WEEK 4 - OPS.pdf"
+    },
+    {
+      "id": "MOD-FN-5",
+      "course": "Open Source Programming",
+      "semester": "finals",
+      "week": 5,
+      "title": "Finals Week 5",
+      "description": "Finals Week 5 Module",
+      "pdf": "/modules/finals/[FN] - WEEK 5 - OPS.pdf"
+    },
+    {
+      "id": "MOD-FN-6",
+      "course": "Open Source Programming",
+      "semester": "finals",
+      "week": 6,
+      "title": "Finals Week 6",
+      "description": "Finals Week 6 Module",
+      "pdf": "/modules/finals/[FN] - WEEK 6 - OPS.pdf"
+    },
+    {
+      "id": "MOD-FN-7",
+      "course": "Open Source Programming",
+      "semester": "finals",
+      "week": 7,
+      "title": "Finals Week 7",
+      "description": "Finals Week 7 Module",
+      "pdf": "/modules/finals/[FN] - WEEK 7 - OPS.pdf"
+    }
+  ]
+}
