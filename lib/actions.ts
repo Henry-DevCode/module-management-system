@@ -5,7 +5,7 @@ import { Student, Module, Activity, Instructor } from '../types';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-export async function registerStudent(prevState: any, formData: FormData) {
+export async function registerStudent(prevState: unknown, formData: FormData) {
   const studentId = formData.get('studentId') as string;
   const fullName = formData.get('fullName') as string;
   const section = formData.get('section') as string;
@@ -55,7 +55,7 @@ export async function registerStudent(prevState: any, formData: FormData) {
   redirect('/dashboard');
 }
 
-export async function loginStudent(prevState: any, formData: FormData) {
+export async function loginStudent(prevState: unknown, formData: FormData) {
   const studentId = formData.get('studentId') as string;
 
   if (!studentId) {
@@ -176,7 +176,7 @@ export async function getDashboardStats() {
   return null;
 }
 
-export async function loginInstructor(prevState: any, formData: FormData) {
+export async function loginInstructor(prevState: unknown, formData: FormData) {
   const username = formData.get('username') as string;
   const password = formData.get('password') as string;
 

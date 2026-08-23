@@ -12,9 +12,9 @@ export default async function ModuleDetail(props: { params: Promise<{ moduleId: 
   }
 
   const params = await props.params;
-  const module = await getModule(params.moduleId);
+  const moduleData = await getModule(params.moduleId);
 
-  if (!module) {
+  if (!moduleData) {
     return (
       <PageContainer pageTitle="Module Not Found">
         <div className="py-12 text-center">
