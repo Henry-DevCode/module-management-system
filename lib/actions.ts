@@ -1,6 +1,6 @@
 "use server"
 
-import { readJson, writeJson } from './data';
+import { supabase } from './supabase';
 import { Student, AllowedStudent, Module, Activity, Instructor } from '../types';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -19,12 +19,13 @@ export async function registerStudent(prevState: any, formData: FormData) {
   const nameLower = nameTrimmed.toLowerCase();
   
   // Validate against allowed students
-  const allowedData = readJson<{ students: AllowedStudent[] }>('allowed_students.json');
-  const isAllowed = allowedData.students.some(
-    s => s.fullName.toLowerCase() === nameLower && s.section === section
-  );
+  const { data: allowedStudents, error: allowedError } = await supabase
+    .from('allowed_students')
+    .select('*')
+    .ilike('full_name', nameLower)
+    .eq('section', section);
 
-  if (!isAllowed) {
+  if (allowedError || !allowedStudents || allowedStudents.length === 0) {
     return { error: 'Student not found in the master list. Please make sure your full name and section are correct.' };
   }
   
@@ -32,37 +33,47 @@ export async function registerStudent(prevState: any, formData: FormData) {
     return { error: 'Invalid course selected.' };
   }
 
-  const studentsData = readJson<{ students: Student[] }>('students.json');
-  
   // Check if student ID already registered
-  const existingId = studentsData.students.find(s => s.id === studentId);
-  if (existingId) {
+  const { data: existingIdUser } = await supabase
+    .from('students')
+    .select('id')
+    .eq('id', studentId.trim())
+    .single();
+
+  if (existingIdUser) {
     return { error: 'This Student ID is already registered. Please log in.' };
   }
 
   // Check if this student (by name/section) is already registered under another ID
-  const existingStudent = studentsData.students.find(
-    s => s.fullName.toLowerCase() === nameLower && s.section === section
-  );
-  if (existingStudent) {
+  const { data: existingNameUser } = await supabase
+    .from('students')
+    .select('id')
+    .ilike('full_name', nameLower)
+    .eq('section', section)
+    .single();
+
+  if (existingNameUser) {
     return { error: 'You are already registered. Please log in using your Student ID.' };
   }
 
   // Register new student
-  const newStudent: Student = {
-    id: studentId.trim(),
-    fullName: nameTrimmed,
-    section,
-    course,
-    registeredAt: new Date().toISOString()
-  };
-  
-  studentsData.students.push(newStudent);
-  writeJson('students.json', studentsData);
+  const { error: insertError } = await supabase
+    .from('students')
+    .insert({
+      id: studentId.trim(),
+      full_name: nameTrimmed,
+      section: section,
+      course: course
+    });
+
+  if (insertError) {
+    console.error(insertError);
+    return { error: 'Failed to register student. Database error.' };
+  }
 
   // Log in by setting a cookie
   const cookieStore = await cookies();
-  cookieStore.set('studentId', newStudent.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+  cookieStore.set('studentId', studentId.trim(), { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
 
   redirect('/dashboard');
 }
@@ -77,8 +88,11 @@ export async function loginStudent(prevState: any, formData: FormData) {
   const cleanId = studentId.trim();
 
   // Check if student is registered
-  const studentsData = readJson<{ students: Student[] }>('students.json');
-  const student = studentsData.students.find(s => s.id === cleanId);
+  const { data: student } = await supabase
+    .from('students')
+    .select('id')
+    .eq('id', cleanId)
+    .single();
 
   if (!student) {
     return { error: 'Student ID not found. Have you registered yet?' };
@@ -102,74 +116,88 @@ export async function getStudent(): Promise<Student | null> {
   const studentId = cookieStore.get('studentId')?.value;
   if (!studentId) return null;
 
-  const studentsData = readJson<{ students: Student[] }>('students.json');
-  return studentsData.students.find(s => s.id === studentId) || null;
+  const { data: student } = await supabase
+    .from('students')
+    .select('*')
+    .eq('id', studentId)
+    .single();
+
+  if (!student) return null;
+
+  return {
+    id: student.id,
+    fullName: student.full_name,
+    section: student.section,
+    course: student.course,
+    registeredAt: student.registered_at
+  };
 }
 
-export async function getModules() {
-  const data = readJson<{ modules: Module[] }>('modules.json');
-  return data.modules;
+export async function getModules(): Promise<Module[]> {
+  const { data: modules } = await supabase
+    .from('modules')
+    .select('*');
+    
+  if (!modules) return [];
+  
+  return modules.map(m => ({
+    id: m.id,
+    course: m.course,
+    semester: m.semester,
+    week: m.week,
+    title: m.title,
+    description: m.description,
+    pdf: m.pdf
+  }));
 }
 
-export async function getModule(id: string) {
-  const modules = await getModules();
-  return modules.find(m => m.id === id) || null;
+export async function getModule(id: string): Promise<Module | null> {
+  const { data: module } = await supabase
+    .from('modules')
+    .select('*')
+    .eq('id', id)
+    .single();
+    
+  if (!module) return null;
+
+  return {
+    id: module.id,
+    course: module.course,
+    semester: module.semester,
+    week: module.week,
+    title: module.title,
+    description: module.description,
+    pdf: module.pdf
+  };
 }
 
 export async function recordModuleView(moduleId: string) {
   const student = await getStudent();
   if (!student) return;
 
-  const activityData = readJson<{ activity: Activity[] }>('activity.json');
-  
-  const hasViewed = activityData.activity.some(a => a.studentId === student.id && a.moduleId === moduleId);
+  const { data: hasViewed } = await supabase
+    .from('activity')
+    .select('id')
+    .eq('student_id', student.id)
+    .eq('module_id', moduleId)
+    .single();
+
   if (!hasViewed) {
-    const newActivity: Activity = {
-      id: `ACT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      studentId: student.id,
-      moduleId,
-      viewedAt: new Date().toISOString()
-    };
-    activityData.activity.push(newActivity);
-    writeJson('activity.json', activityData);
+    await supabase.from('activity').insert({
+      student_id: student.id,
+      module_id: moduleId
+    });
   }
 }
 
 export async function getAllActivities() {
-  const data = readJson<{ activity: Activity[] }>('activity.json');
-  return data.activity;
+  const { data } = await supabase.from('activity').select('*');
+  return data || [];
 }
 
 export async function getDashboardStats() {
-  const studentsData = readJson<{ students: Student[] }>('students.json');
-  const activities = await getAllActivities();
-  const modules = await getModules();
-
-  const bsit3eCount = studentsData.students.filter(s => s.section === 'BSIT 3E').length;
-  const bsit3fCount = studentsData.students.filter(s => s.section === 'BSIT 3F').length;
-  const totalStudents = studentsData.students.length;
-  const uniqueStudentsViewed = new Set(activities.map(a => a.studentId)).size;
-
-  const moduleViewsData = modules.map(m => {
-    return {
-      name: m.title.replace('Midterm ', 'M').replace('Finals ', 'F'),
-      views: activities.filter(a => a.moduleId === m.id).length
-    };
-  });
-
-  const sectionData = [
-    { name: 'BSIT 3E', students: bsit3eCount },
-    { name: 'BSIT 3F', students: bsit3fCount },
-  ];
-
-  return {
-    bsit3eCount,
-    bsit3fCount,
-    totalStudents,
-    uniqueStudentsViewed,
-    moduleViewsData,
-    sectionData
-  };
+  // Now redundant, instructor stats handled below
+  return null;
 }
 
 export async function loginInstructor(prevState: any, formData: FormData) {
@@ -180,10 +208,12 @@ export async function loginInstructor(prevState: any, formData: FormData) {
     return { error: 'Username and password are required.' };
   }
 
-  const instructorsData = readJson<{ instructors: Instructor[] }>('instructors.json');
-  const instructor = instructorsData.instructors.find(
-    i => i.username === username && i.password === password
-  );
+  const { data: instructor } = await supabase
+    .from('instructors')
+    .select('*')
+    .eq('username', username)
+    .eq('password', password)
+    .single();
 
   if (!instructor) {
     return { error: 'Invalid username or password.' };
@@ -206,12 +236,19 @@ export async function getInstructor(): Promise<Instructor | null> {
   const instructorId = cookieStore.get('instructorId')?.value;
   if (!instructorId) return null;
 
-  const instructorsData = readJson<{ instructors: Instructor[] }>('instructors.json');
-  const instructor = instructorsData.instructors.find(i => i.id === instructorId) || null;
+  const { data: instructor } = await supabase
+    .from('instructors')
+    .select('*')
+    .eq('id', instructorId)
+    .single();
+
   if (instructor) {
-    // Remove password before returning to client components or pages
-    const { password, ...safeInstructor } = instructor;
-    return safeInstructor as Instructor;
+    return {
+      id: instructor.id,
+      username: instructor.username,
+      fullName: instructor.full_name,
+      sections: instructor.sections
+    };
   }
   return null;
 }
@@ -220,24 +257,32 @@ export async function getInstructorDashboardStats() {
   const instructor = await getInstructor();
   if (!instructor) redirect('/instructor-login');
 
-  const studentsData = readJson<{ students: Student[] }>('students.json');
-  const activities = await getAllActivities();
+  const { data: instructorStudentsData } = await supabase
+    .from('students')
+    .select('*')
+    .in('section', instructor.sections);
+    
+  const instructorStudents = instructorStudentsData || [];
+  const instructorStudentIds = instructorStudents.map(s => s.id);
+
+  let instructorActivities = [];
+  if (instructorStudentIds.length > 0) {
+    const { data: acts } = await supabase
+      .from('activity')
+      .select('*')
+      .in('student_id', instructorStudentIds);
+    instructorActivities = acts || [];
+  }
+
   const modules = await getModules();
 
-  // Filter students to only those in the instructor's sections
-  const instructorStudents = studentsData.students.filter(s => instructor.sections.includes(s.section));
-  const instructorStudentIds = new Set(instructorStudents.map(s => s.id));
-
-  // Filter activities to only those from instructor's students
-  const instructorActivities = activities.filter(a => instructorStudentIds.has(a.studentId));
-
   const totalStudents = instructorStudents.length;
-  const uniqueStudentsViewed = new Set(instructorActivities.map(a => a.studentId)).size;
+  const uniqueStudentsViewed = new Set(instructorActivities.map(a => a.student_id)).size;
 
   const moduleViewsData = modules.map(m => {
     return {
       name: m.title.replace('Midterm ', 'M').replace('Finals ', 'F'),
-      views: instructorActivities.filter(a => a.moduleId === m.id).length
+      views: instructorActivities.filter(a => a.module_id === m.id).length
     };
   });
 
@@ -255,10 +300,22 @@ export async function getInstructorDashboardStats() {
   };
 }
 
-export async function getInstructorStudents() {
+export async function getInstructorStudents(): Promise<Student[]> {
   const instructor = await getInstructor();
   if (!instructor) redirect('/instructor-login');
 
-  const studentsData = readJson<{ students: Student[] }>('students.json');
-  return studentsData.students.filter(s => instructor.sections.includes(s.section));
+  const { data: students } = await supabase
+    .from('students')
+    .select('*')
+    .in('section', instructor.sections);
+    
+  if (!students) return [];
+  
+  return students.map(s => ({
+    id: s.id,
+    fullName: s.full_name,
+    section: s.section,
+    course: s.course,
+    registeredAt: s.registered_at
+  }));
 }
