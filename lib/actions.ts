@@ -1,7 +1,7 @@
 "use server"
 
 import { supabase } from './supabase';
-import { Student, AllowedStudent, Module, Activity, Instructor } from '../types';
+import { Student, Module, Activity, Instructor } from '../types';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
@@ -16,18 +16,7 @@ export async function registerStudent(prevState: any, formData: FormData) {
   }
 
   const nameTrimmed = fullName.trim();
-  const nameLower = nameTrimmed.toLowerCase();
-  
-  // Validate against allowed students
-  const { data: allowedStudents, error: allowedError } = await supabase
-    .from('allowed_students')
-    .select('*')
-    .ilike('full_name', nameLower)
-    .eq('section', section);
-
-  if (allowedError || !allowedStudents || allowedStudents.length === 0) {
-    return { error: 'Student not found in the master list. Please make sure your full name and section are correct.' };
-  }
+  const cleanId = studentId.trim();
   
   if (course !== 'Open Source Programming') {
     return { error: 'Invalid course selected.' };
@@ -37,30 +26,18 @@ export async function registerStudent(prevState: any, formData: FormData) {
   const { data: existingIdUser } = await supabase
     .from('students')
     .select('id')
-    .eq('id', studentId.trim())
+    .eq('id', cleanId)
     .single();
 
   if (existingIdUser) {
     return { error: 'This Student ID is already registered. Please log in.' };
   }
 
-  // Check if this student (by name/section) is already registered under another ID
-  const { data: existingNameUser } = await supabase
-    .from('students')
-    .select('id')
-    .ilike('full_name', nameLower)
-    .eq('section', section)
-    .single();
-
-  if (existingNameUser) {
-    return { error: 'You are already registered. Please log in using your Student ID.' };
-  }
-
   // Register new student
   const { error: insertError } = await supabase
     .from('students')
     .insert({
-      id: studentId.trim(),
+      id: cleanId,
       full_name: nameTrimmed,
       section: section,
       course: course
@@ -73,7 +50,7 @@ export async function registerStudent(prevState: any, formData: FormData) {
 
   // Log in by setting a cookie
   const cookieStore = await cookies();
-  cookieStore.set('studentId', studentId.trim(), { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+  cookieStore.set('studentId', cleanId, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
 
   redirect('/dashboard');
 }
@@ -196,7 +173,6 @@ export async function getAllActivities() {
 }
 
 export async function getDashboardStats() {
-  // Now redundant, instructor stats handled below
   return null;
 }
 
