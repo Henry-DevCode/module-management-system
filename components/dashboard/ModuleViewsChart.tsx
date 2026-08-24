@@ -1,7 +1,7 @@
 "use client"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export function ModuleViewsChart({ data }: { data: { name: string; views: number }[][] }) {
+export function ModuleViewsChart({ data }: { data: { name: string; views: number }[] }) {
   // Increase the height dynamically based on the number of items or fix it to a taller size.
   // 14 items x 30px per item is roughly 420px. 
   return (

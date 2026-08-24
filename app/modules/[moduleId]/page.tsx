@@ -28,26 +28,26 @@ export default async function ModuleDetail(props: { params: Promise<{ moduleId: 
   }
 
   // Record view asynchronously
-  await recordModuleView(module.id);
+  await recordModuleView(moduleData.id);
 
   return (
-    <PageContainer pageTitle={module.title}>
+    <PageContainer pageTitle={moduleData.title}>
       <div className="flex flex-col mb-8">
         <div className="mb-8 flex-shrink-0">
-          <Link href={`/modules?semester=${module.semester}`} className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-[#0D3B1A] mb-4 transition-colors">
+          <Link href={`/modules?semester=${moduleData.semester}`} className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-[#0D3B1A] mb-4 transition-colors">
             <ArrowLeft size={16} className="mr-2" />
             Back to Modules
           </Link>
           <div>
-            <h1 className="text-3xl font-semibold mb-2 text-gray-900">{module.title}</h1>
+            <h1 className="text-3xl font-semibold mb-2 text-gray-900">{moduleData.title}</h1>
             <div className="text-sm text-[#0D3B1A]/70 uppercase tracking-wider font-semibold">
-              Week {module.week} • {module.semester}
+              Week {moduleData.week} • {moduleData.semester}
             </div>
           </div>
         </div>
 
         <div className="w-full">
-          <PdfViewerWrapper url={module.pdf} />
+          <PdfViewerWrapper url={moduleData.pdf} />
         </div>
       </div>
     </PageContainer>

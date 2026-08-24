@@ -1,7 +1,7 @@
 "use client"
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-export function SectionChart({ data }: { data: { name: string; students: number }[][] }) {
+export function SectionChart({ data }: { data: { name: string; students: number }[] }) {
   const COLORS = ['#0D3B1A', '#10b981'];
 
   return (
