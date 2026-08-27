@@ -17,7 +17,7 @@ export default async function Dashboard() {
     <PageContainer pageTitle="Overview" fullWidth>
       <div className="space-y-10">
         <div className="pb-2">
-          <h1 className="text-3xl font-medium tracking-tight mb-2 text-gray-900">Good morning, {student.fullName.split(' ')[0]}.</h1>
+          <h1 className="text-3xl font-medium tracking-tight mb-2 text-gray-900">Good morning, {student.fullName.split(' ')[0]}</h1>
           <p className="text-gray-500 text-sm">Welcome to your learning dashboard. Continue where you left off.</p>
         </div>
 
