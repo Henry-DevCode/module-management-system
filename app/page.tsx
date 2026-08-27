@@ -23,11 +23,15 @@ export default async function Home() {
             <LoginForm />
           </div>
 
-          <div className="mt-8 flex flex-col items-center gap-3 text-sm">
-            <p className="text-gray-500">
-              Not yet registered? <Link href="/register" className="text-[#0D3B1A] font-semibold hover:underline">Create account</Link>
-            </p>
-          </div>
+          <div className="mt-8 pt-6 border-t border-gray-100 text-center">
+          <p className="text-gray-500 text-sm mb-4">Are you an instructor?</p>
+          <Link 
+            href="/instructor-login" 
+            className="text-[#0D3B1A] font-medium hover:underline text-sm"
+          >
+            Instructor Login
+          </Link>
+        </div>
         </div>
       </div>
     </div>
