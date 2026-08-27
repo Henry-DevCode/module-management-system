@@ -19,7 +19,7 @@ export default function SidebarClient({ student }: { student?: Student }) {
           <Link href="/dashboard" className="flex items-center w-full h-full relative">
             {/* Logo: Visible only when collapsed */}
             <div className="absolute left-0 w-20 flex justify-center transition-all duration-200 opacity-100 group-hover:opacity-0 group-hover:scale-50">
-              <img src="/image/mml-logo.png" alt="MML Logo" className="h-8 w-auto object-contain" />
+              <img src="/image/mml-logo.png" alt="MML Logo" className="h-10 w-auto object-contain" />
             </div>
             
             {/* Text: Visible only when expanded */}

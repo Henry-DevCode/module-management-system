@@ -22,7 +22,7 @@ export default async function Home() {
           <div className="w-full">
             <LoginForm />
           </div>
-
+{/* 
           <div className="mt-8 pt-6 border-t border-gray-100 text-center">
           <p className="text-gray-500 text-sm mb-4">Are you an instructor?</p>
           <Link 
@@ -31,7 +31,7 @@ export default async function Home() {
           >
             Instructor Login
           </Link>
-        </div>
+          </div> */}
         </div>
       </div>
     </div>
