@@ -39,11 +39,16 @@ export default async function InstructorModulesPage(props: { searchParams?: Prom
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredModules.length > 0 ? (
           filteredModules.map(module => (
-            <div key={module.id} className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-xs font-semibold text-[#0D3B1A]/70 uppercase tracking-wider mb-2">Week {module.week}</div>
-              <h3 className="font-semibold text-gray-900 mb-2">{module.title}</h3>
+            <Link 
+              key={module.id} 
+              href={`/instructor/modules/${module.id}`}
+              className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm hover:shadow-md hover:border-[#0D3B1A]/30 transition-all group"
+            >
+              <div className="text-xs font-semibold text-[#0D3B1A]/70 uppercase tracking-wider mb-2 group-hover:text-[#0D3B1A]">Week {module.week}</div>
+              <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-[#0D3B1A] transition-colors">{module.title}</h3>
               <p className="text-sm text-gray-500 line-clamp-2">{module.description}</p>
-            </div>
+              <div className="mt-4 text-xs font-medium text-[#0D3B1A]/60 group-hover:text-[#0D3B1A] transition-colors">Open Module →</div>
+            </Link>
           ))
         ) : (
           <div className="col-span-3 text-center text-gray-400 py-12">No modules available for this semester.</div>
